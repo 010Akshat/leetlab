@@ -31,8 +31,11 @@ export const createProblem = asyncHandler(async(req,res)=>{
         const tokens = submissionResults.map((res)=>res.token)
         const results = pollBatchResults(tokens)
 
+
         for(let i=0;i<results.length;i++){
             const result = results[i];
+            // if it not accepted , we will give error.
+            // TODO: In future , we can add detail what specific error has arisen
             if(result.status.id!==3){
                 throw new ApiError(400,`Testcase ${i+1} failed for language ${language}`)
             }
