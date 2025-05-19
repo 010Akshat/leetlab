@@ -1,5 +1,5 @@
-import { asyncHandler } from "../utils/AsyncHandler.js";
-import axios from "axios"
+import axios from "axios";
+import { ApiError } from "../utils/api-error.js";
 export const getJudge0LanguageId = (language)=>{
     const languageMap = {
         "PYTHON":71,
@@ -10,14 +10,19 @@ export const getJudge0LanguageId = (language)=>{
     return languageMap[language.toUpperCase()];
 }
 
-export const submitBatch = asyncHandler(async(submissions)=>{
-    const {data} = await axios.post(`${process.env.JUDGE0_API_URL}/submissions/batch?base64_encoded=false`,{
-        submissions
-    })
-
-    console.log("Submission Results: ", data);
-    return data;//[{token},{token},{token}]
-})
+export const submitBatch = async(submissions)=>{
+      try {
+        const {data} = await axios.post(`${process.env.JUDGE0_API_URL}/submissions/batch?base64_encoded=false`,{
+            submissions
+        })
+    
+        console.log("Submission Results: ", data);
+        return data;//[{token},{token},{token}]
+      } catch (error) {
+        console.log(error.status ,error.message)
+        throw new ApiError(error.status || 500,error.message || "Internal Server Error");
+      }
+}
 
 
 const sleep = (ms)=>new Promise((resolve)=>setTimeout(resolve,ms));
@@ -25,44 +30,48 @@ const sleep = (ms)=>new Promise((resolve)=>setTimeout(resolve,ms));
 /* 
 You are asking a endpoint again and again , if work is done or not (Baar Baar ungli karna) after regular interval
 */
-export const pollBatchResults = asyncHandler(async(tokens)=>{
+export const pollBatchResults = async(tokens)=>{
     while(true){
-        const {data} = await axios.get(`${process.env.JUDGE0_API_URL}/submissions/batch`,{
-            params:{
-                tokens:tokens.join(","),
-                base64_encoded:false
-            }
-        })
+        let Data;
+        try {
+          const {data} = await axios.get(`${process.env.JUDGE0_API_URL}/submissions/batch`,{
+              params:{
+                  tokens:tokens.join(","),
+                  base64_encoded:false
+              }
+          })
+          Data=data;
+        } catch (error) {
+            console.log(error.status ,error.message)
+            throw new ApiError(error.status || 500,error.message || "Internal Server Error");
+        }
 /*
+console.log(Data);
 Example of data returned after passing token to this endpoint
 {
-  "submissions": [
+  submissions: [
     {
-      "language_id": 46,
-      "stdout": "hello from Bash\n",
-      "status_id": 3,
-      "stderr": null,
-      "token": "db54881d-bcf5-4c7b-a2e3-d33fe7e25de7"
+      stdout: null,
+      time: null,
+      memory: null,
+      stderr: null,
+      token: '2654d57b-3cec-4e15-a1b3-9b79828cd2e5',
+      compile_output: null,
+      message: null,
+      status: {id:3 , description:'Accepted'}
     },
     {
-      "language_id": 71,
-      "stdout": "hello from Python\n",
-      "status_id": 3,
-      "stderr": null,
-      "token": "ecc52a9b-ea80-4a00-ad50-4ab6cc3bb2a1"
-    },
-    {
-      "language_id": 72,
-      "stdout": "hello from Ruby\n",
-      "status_id": 3,
-      "stderr": null,
-      "token": "1b35ec3b-5776-48ef-b646-d5522bdeb2cc"
+      stdout: null,
+      time: null,
+      memory: null,
+      stderr: null,
+      token: '438e1b14-a0f6-47af-8176-7f7528b8f00f',
+      compile_output: null,
+      message: null,
+      status: {id:3 , description:'Accepted'}
     }
-  ]
-}
 */
-        const results = data.submissions;
-
+        const results = Data.submissions;
         const isAllDone = results.every(
             (r)=> r.status.id!==1 && r.status.id!==2  // Every testcase is processed , result can be anything
         )
@@ -72,7 +81,7 @@ Example of data returned after passing token to this endpoint
         }
         await sleep(1000);
     }
-})
+}
 
 /* Possible Statuses:
 [
