@@ -83,6 +83,16 @@ Example of data returned after passing token to this endpoint
     }
 }
 
+export function getLanguageName(languageId){
+  const LANGUAGE_NAMES={
+    63:"JavaScript",
+    71:"Python",
+    62:"Java",
+    54:"C++"
+  }
+  return LANGUAGE_NAMES[languageId] || "Unknown";
+}
+
 /* Possible Statuses:
 [
   {
