@@ -4,6 +4,7 @@ import { UserRole } from "../generated/prisma/index.js";
 import {ApiError} from "../utils/api-error.js"
 import {ApiResponse} from "../utils/api-response.js"
 import { getJudge0LanguageId,submitBatch,pollBatchResults} from "../libs/judge0.lib.js";
+import { isCancel } from "axios";
 export const createProblem = asyncHandler(async(req,res)=>{
     // get the required data from request body
     const {title, description,difficulty,tags,examples,constraints,testcases,codeSnippets, referenceSolutions} = req.body
@@ -148,5 +149,21 @@ export const deleteProblem = asyncHandler(async(req,res)=>{
     
 })
 export const getAllProblemsSolvedByUser = asyncHandler(async(req,res)=>{
-    
+    const problems = await db.problem.findMany({
+        where:{
+            solvedBy:{
+                some:{
+                    userId:req.user.id
+                }
+            }
+        },
+        include:{
+            solvedBy:{
+                where:{
+                    userId:req.user.id  
+                }
+            }
+        }
+    })
+    return res.status(200).json(new ApiResponse(200,problems,"Problems Solved By User Fetched Successfully"))
 })
