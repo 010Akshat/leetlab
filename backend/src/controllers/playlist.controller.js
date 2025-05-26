@@ -36,10 +36,25 @@ export const addProblemToPlaylist = asyncHandler(async(req,res)=>{
     const {playlistId} = req.params
     const {problemIds} = req.body
      
-    console.log(playlistId)
     if(!Array.isArray(problemIds) || problemIds.length === 0){
         throw new ApiError(400,"Invalid or missing problemId");
     }
+    await Promise.all(problemIds.map(async (problemId) => {
+        const existingProblemInPlaylist = await db.problemInPlaylist.findUnique({
+            where: {
+                playListId_problemId: {
+                    playListId: playlistId,
+                    problemId
+                }
+            }
+        });
+
+        if (existingProblemInPlaylist) {
+            throw new ApiError(400, "Problem Already Exist In Playlist");
+        }
+    }));
+    
+    
     const problemsInPlaylist = await db.problemInPlaylist.createMany({
         data:problemIds.map((problemId)=>({
             playListId:playlistId,

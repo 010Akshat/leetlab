@@ -563,20 +563,20 @@ const CreateProblemForm = () => {
 
     const onSubmit = async (value)=>{
         console.log(value)
-        // try {
-        //     setIsLoading(true)
-        //     const res = await axiosInstance.post("/problems/create-problem" , value)
-        //     console.log(res.data);
-        //     toast.success(res.data.message || "Problem Created successfully⚡");
-        //     navigation("/");
+        try {
+            setIsLoading(true)
+            const res = await axiosInstance.post("/problems/create-problem" , value)
+            console.log(res.data);
+            toast.success(res.data.message || "Problem Created successfully⚡");
+            navigation("/");
 
-        // } catch (error) {
-        //     console.log(error);
-        //     toast.error("Error creating problem")
-        // }
-        // finally{
-        //     setIsLoading(false);
-        // }
+        } catch (error) { 
+            console.log(error.response);
+            toast.error("Error creating problem")
+        }
+        finally{
+            setIsLoading(false);
+        }
   }
 
   const loadSampleData=()=>{

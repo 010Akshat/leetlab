@@ -53,7 +53,17 @@ export const createProblem = asyncHandler(async(req,res)=>{
                 .json(new ApiResponse(201,newProblem,"Problem created Successfully"))
 })
 export const getAllProblems = asyncHandler(async(req,res)=>{
-    const problems = await db.problem.findMany();
+    const problems = await db.problem.findMany(
+      {
+        include:{
+          solvedBy:{
+            where:{
+              userId:req.user.id
+            }
+          }
+        }
+      }
+    );
     if(!problems){
         throw new ApiError(404,"Error Fetching Problems")
     }
@@ -164,6 +174,9 @@ export const getAllProblemsSolvedByUser = asyncHandler(async(req,res)=>{
                 }
             }
         }
+    })
+    problems.forEach((p)=>{
+        console.log(p.solvedBy);
     })
     return res.status(200).json(new ApiResponse(200,problems,"Problems Solved By User Fetched Successfully"))
 })
